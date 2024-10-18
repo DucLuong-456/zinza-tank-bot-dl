@@ -53,13 +53,17 @@ function checkCollision(x, y, direction, velocity, map) {
   return false;
 }
 
-// Di chuyển xe tăng
 function moveTank(x, y, direction, velocity, map, bot) {
-  socket.emit("move", { orient: direction });
   if (
     !checkCollision(x, y, direction, velocity, map) &&
-    bot.name !== "Sinbad"
+    bot.name !== "MonMit"
   ) {
+    if (direction == "UP") direction = "DOWN";
+    if (direction == "DOWN") direction = "UP";
+    if (direction == "RIGHT") direction = "LEFT";
+    if (direction == "LEFT") direction = "RIGHT";
+    console.log(direction);
+
     socket.emit("move", { orient: direction });
   }
 }
@@ -68,31 +72,25 @@ const auth = {
   token: process.env.TOKEN,
 };
 
-// Kết nối socket
 const socket = io(process.env.SOCKET_SERVER, { auth });
 
 socket.emit("join", {});
-// Dữ liệu bản đồ
 let mapData = null;
 
-// Xử lý sự kiện join và nhận dữ liệu map
 socket.on("user", (data) => {
-  mapData = data.map; // Gán map data khi có dữ liệu
+  mapData = data.map;
 });
 
-// Bắt đầu xử lý bot di chuyển
 socket.on("player_move", (bot) => {
   if (mapData && bot) {
     moveTank(bot.x, bot.y, bot.orient, 3, mapData, bot);
   }
 });
 
-// Bắn tự động với khoảng thời gian cố định
 setInterval(() => {
   socket.emit("shoot", {});
-}, 1200);
+}, 1100);
 
-// Bắt đầu bot
 function startBot() {
   console.log("Bot is starting...");
 }
