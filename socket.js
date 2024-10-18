@@ -1,7 +1,6 @@
 require("dotenv").config();
 const io = require("socket.io-client");
 
-// Kiểm tra có vật cản (brick, water, tree)
 function isObstacle(row, col, map) {
   if (map[row] && map[row][col]) {
     return (
@@ -11,7 +10,6 @@ function isObstacle(row, col, map) {
   return false;
 }
 
-// Kiểm tra va chạm
 function checkCollision(x, y, direction, velocity, map) {
   let nextX = x;
   let nextY = y;
@@ -53,17 +51,13 @@ function checkCollision(x, y, direction, velocity, map) {
   return false;
 }
 
-function moveTank(x, y, direction, velocity, map, bot) {
+// Hàm cập nhật vị trí bot khi di chuyển thành công
+function moveTank(bot, direction, velocity, map) {
   if (
-    !checkCollision(x, y, direction, velocity, map) &&
-    bot.name !== "MonMit"
+    !checkCollision(bot.x, bot.y, direction, velocity, map) &&
+    bot.orient == "UP"
   ) {
-    if (direction == "UP") direction = "DOWN";
-    if (direction == "DOWN") direction = "UP";
-    if (direction == "RIGHT") direction = "LEFT";
-    if (direction == "LEFT") direction = "RIGHT";
-    console.log(direction);
-
+    // Gửi thông tin di chuyển lên server
     socket.emit("move", { orient: direction });
   }
 }
@@ -73,20 +67,32 @@ const auth = {
 };
 
 const socket = io(process.env.SOCKET_SERVER, { auth });
-
 socket.emit("join", {});
 let mapData = null;
+let myBot = null;
+const directions = ["UP", "DOWN", "LEFT", "RIGHT"]; // Các hướng di chuyển có thể
 
 socket.on("user", (data) => {
+  console.log(data);
   mapData = data.map;
+  myBot = data.tanks.find((bot) => bot.name === "Sinbad");
 });
 
-socket.on("player_move", (bot) => {
-  if (mapData && bot) {
-    moveTank(bot.x, bot.y, bot.orient, 3, mapData, bot);
+// Hàm di chuyển bot ngẫu nhiên
+function randomMoveBot() {
+  if (mapData && myBot) {
+    const randomDirection =
+      directions[Math.floor(Math.random() * directions.length)];
+    moveTank(myBot, randomDirection, 3, mapData);
   }
-});
+}
 
+// Di chuyển bot mỗi 100ms
+setInterval(() => {
+  randomMoveBot();
+}, 52);
+
+// Bắn mỗi 1100ms
 setInterval(() => {
   socket.emit("shoot", {});
 }, 1100);
