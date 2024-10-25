@@ -11,46 +11,57 @@ const socket = io(process.env.SOCKET_SERVER, {
   auth: { token: process.env.TOKEN },
 });
 
-const moveDirector = {
-  UP: "UP",
-  DOWN: "DOWN",
-  LEFT: "LEFT",
-  RIGHT: "RIGHT",
-};
+// const moveDirector = {
+//   UP: "UP",
+//   DOWN: "DOWN",
+//   LEFT: "LEFT",
+//   RIGHT: "RIGHT",
+// };
 
 const moveArrow = ["UP", "RIGHT", "DOWN", "LEFT"];
 socket.emit("join", {});
 
-let mapData = null;
-let myBot = null;
+async function shoot() {
+  setInterval(() => {
+    socket.emit("shoot", {});
+  }, 1100);
+}
 
-const isCheckObstacle = (mapItem) => {
-  return mapItem == "B" || mapItem == "T" || mapItem == "W";
-};
+async function startBot() {
+  let mapData = null;
+  let myBot = null;
 
-socket.on("user", (data) => {
-  mapData = data.map;
-  myBot = data.tanks.find((bot) => bot.name === "Sinbad");
+  socket.on("user", (data) => {
+    mapData = data.map;
+    myBot = data.tanks.find((bot) => bot.name === "MonMit");
 
-  if (!myBot) {
-    console.log("my bot doest not exist!");
-  } else {
-    console.log(myBot);
-    nextX = myBot.x;
-    nextY = myBot.y;
-  }
+    if (myBot) {
+      socket.on("player_move", (data) => {
+        if (data.name === "MonMit") {
+          socket.emit("move", {
+            orient:
+              data.orient === "UP"
+                ? "DOWN"
+                : data.orient === "DOWN"
+                ? "UP"
+                : data.orient === "LEFT"
+                ? "RIGHT"
+                : "LEFT",
+          });
+        }
+        socket.emit("shoot", {});
+      });
+    }
+  });
+
   for (let index = 0; index < 4; index++) {
     setInterval(() => {
       socket.emit("move", { orient: moveArrow[index] });
     }, 31);
   }
-});
 
-setInterval(() => {
-  socket.emit("shoot", {});
-}, 1100);
+  await shoot();
 
-function startBot() {
   console.log("Bot is starting...");
 }
 
