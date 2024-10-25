@@ -11,20 +11,25 @@ const socket = io(process.env.SOCKET_SERVER, {
   auth: { token: process.env.TOKEN },
 });
 
-// const moveDirector = {
-//   UP: "UP",
-//   DOWN: "DOWN",
-//   LEFT: "LEFT",
-//   RIGHT: "RIGHT",
-// };
-
-const moveArrow = ["UP", "RIGHT", "DOWN", "LEFT"];
+const moveArrow = ["UP", "LEFT", "RIGHT", "DOWN"];
 socket.emit("join", {});
+
+async function delay(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function moveBot(orient, steps) {
+  for (let i = 0; i < steps; i++) {
+    socket.emit("move", { orient });
+    await delay(31);
+  }
+  await delay(31 * steps);
+}
 
 async function shoot() {
   setInterval(() => {
     socket.emit("shoot", {});
-  }, 1100);
+  }, 1020);
 }
 
 async function startBot() {
@@ -54,15 +59,18 @@ async function startBot() {
     }
   });
 
-  for (let index = 0; index < 4; index++) {
-    setInterval(() => {
-      socket.emit("move", { orient: moveArrow[index] });
-    }, 31);
-  }
-
   await shoot();
 
   console.log("Bot is starting...");
+
+  const v = 35;
+
+  while (true) {
+    await moveBot("UP", v);
+    await moveBot("LEFT", v);
+    await moveBot("RIGHT", v);
+    await moveBot("DOWN", v);
+  }
 }
 
 startBot();
