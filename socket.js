@@ -1,12 +1,13 @@
 require("dotenv").config();
 const io = require("socket.io-client");
-const WIDTH = 900; // Bản đồ 900px
-const HEIGHT = 700; // Bản đồ 700px
-const TANK_SIZE = 33; // Xe tăng 33x33
-const TILE_SIZE = 20; // Mỗi ô gạch 20x20
+const WIDTH = 900;
+const HEIGHT = 700;
+const TANK_SIZE = 33;
+const TILE_SIZE = 20;
 const WIDTH_MAP = 45;
 const HEIGHT_MAP = 35;
 const MOVE_DISTANCE = 3;
+
 const socket = io(process.env.SOCKET_SERVER, {
   auth: { token: process.env.TOKEN },
 });
